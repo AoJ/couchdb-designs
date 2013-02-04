@@ -1,0 +1,6 @@
+exports.env = {
+    'default': {
+        db_: 'http://kanso:kanso3@couch.allin1.cz:9090/feed-watchman',
+        db: 'http://kanso:kanso3@d.n13.cz:9090/feed-watchman' 
+    },
+};

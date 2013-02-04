@@ -1,0 +1,17 @@
+{
+    "name": "roll",
+    "version": "0.0.1",
+    "description": "Zapa feed tracking",
+    "modules": ["lib"],
+    "load": "lib/views",
+    "handlebars": {
+        "all_partials": false,
+        "templates": "templates"
+    },
+    "dependencies": {
+    	"attachments": null,
+        "properties": null,
+        "modules": null,
+        "handlebars": null
+    }
+}
