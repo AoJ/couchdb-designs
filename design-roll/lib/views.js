@@ -154,13 +154,6 @@ exports.views = {
                 _id: doc._id
             };
 
-
-            delete emitData.params.title;
-            delete emitData.params.void;
-            delete emitData.params.DIGEST;
-            delete emitData.params.DIGEST1;
-
-
             var action = doc.data.request.presenter + ':' + doc.data.request.params['action'];
             var userAgent = doc.data.headers['user-agent'].replace('User-Agent: ', ''); //firefox kiks, hm nebo parsováni?
             var userAgentType = doc.data.headers.from ? doc.data.headers.from : userAgent.replace(/^([a-z-]+).*$/i, "$1");
