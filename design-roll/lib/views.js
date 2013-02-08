@@ -225,5 +225,34 @@ exports.views = {
             emit([doc.message].concat(de), parseInt(doc.duration, 10) * 10);
         },
         reduce: "_stats"
-    }
-}
+    },
+
+
+	/* ----------------------- component duration ---------------------------------- */
+	"component-duration": {
+		map: function(doc) {
+			if (!doc.type || doc.type.indexOf("/type/access") === -1) return;
+
+			if (!doc.data || !doc.data.duration) return;
+
+			//time
+			var d = doc.time.replace(/[-TZ:.]/g, '-').split('-');
+			var date = new Date(d[0], d[1] - 1, d[2], d[3], d[4]);
+			date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+			var de = [date.getFullYear(), date.getMonth() + 1, date.getDate(), date.getHours() /*, date.getMinutes()*/ ];
+			for (var i = 0; i < de.length; i++) {
+				de[i] = (de[i] < 10 ? '0' : '') + de[i];
+			}
+
+			var duration = doc.data.duration;
+			var dur;
+			for (var j = 0; j < duration.length; j++) {
+				dur = duration[j];
+				if(!dur.name || !dur.time) return;
+				emit([dur.name].concat(de), dur.time);
+			}
+		},
+		reduce: "_count"
+	}
+
+};
