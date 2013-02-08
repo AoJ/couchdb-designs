@@ -63,7 +63,7 @@ exports.lists = {
 			while (row = getRow()) {
 				data.push({
 					name: row.key.slice(options.keySlice),
-					value: row.value.sum
+					value: row.value.sum ? row.value.sum : row.value
 				});
 			}
 
