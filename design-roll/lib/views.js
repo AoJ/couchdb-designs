@@ -37,7 +37,87 @@ exports.lists = {
             //});
             return html;
         })
-    }
+    },
+
+	pie: function(head, req) {
+
+		//http://d.n13.cz:9090/zapa-tracking/_design/roll/_list/pie/component-duration?group_level=1
+
+		var handlebars = require('handlebars');
+		var data = [];
+		var row;
+
+		var options = {
+			title: req.query.title,
+			keySlice: req.query.keySlice || -1,
+			data: []
+		};
+
+		provides('html', function() {
+
+			while (row = getRow()) {
+				data.push({
+					name: row.key.slice(options.keySlice),
+					value: row.value.sum
+				});
+			}
+
+			options.data = JSON.stringify(data);
+
+			// handlebars.templates contains any templates loaded from the template directory in your
+			// kanso.json, if you're not using the build-steps then this will not exist.
+			var html = handlebars.templates['graph_pie.tpl'](options);
+
+			// if you haven't loaded any templates, you can compile your own
+			//var heading = handlebars.compile('<h1>{{title}}</h1>');
+			//var h1 = heading({
+			//    title: 'Hello, world!'
+			//});
+			return html;
+		})
+	},
+
+	multiseries: function(head, req) {
+
+		//http://d.n13.cz:9090/zapa-tracking/_design/roll/_list/multiseries/component-duration?group_level=4
+		var _ = require('underscore')._;
+
+		var handlebars = require('handlebars');
+		var data = {};
+		var row;
+
+		var options = {
+			title: req.query.title,
+			keySlice: req.query.keySlice || -1,
+			data: []
+		};
+
+		provides('html', function() {
+
+			while (row = getRow()) {
+				var date = row.key.slice(-3).join(''); //20130109
+				var component = row.key[0]; //component render X
+				var value = row.value.sum;
+
+				if(!data[date]) data[date] = {'date': date};
+				data[date][component] = value;
+			}
+
+
+			options.data = JSON.stringify(_.values(data));
+
+			// handlebars.templates contains any templates loaded from the template directory in your
+			// kanso.json, if you're not using the build-steps then this will not exist.
+			var html = handlebars.templates['graph_multiseries.tpl'](options);
+
+			// if you haven't loaded any templates, you can compile your own
+			//var heading = handlebars.compile('<h1>{{title}}</h1>');
+			//var h1 = heading({
+			//    title: 'Hello, world!'
+			//});
+			return html;
+		})
+	}
 }
 
 exports.views = {
@@ -252,7 +332,7 @@ exports.views = {
 				emit([dur.name].concat(de), dur.time);
 			}
 		},
-		reduce: "_count"
+		reduce: "_stats"
 	}
 
 };
