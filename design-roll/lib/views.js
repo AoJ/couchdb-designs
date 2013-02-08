@@ -173,12 +173,6 @@ exports.views = {
         map: function(doc) {
             if (!doc.type || doc.type.indexOf("/type/access") === -1) return;
 
-            // dealId
-            var dealId = doc.data.request.params['deal-id'] || doc.data.request.params['order-did'];
-            if (!dealId || dealId === "0") {
-                return;
-            }
-
 			// newsletter
             var utm_campaign = doc.data.request.params.utm_campaign;
             if (!utm_campaign || utm_campaign.indexOf('newsletter') == -1) return;
@@ -217,9 +211,13 @@ exports.views = {
 			// bot ?
             var isBot = doc.data.headers.from || ["facebookexternalhit", "Jakarta"].indexOf(userAgent) >= 0;
 
+			// header referer
+			var referer = doc.data.headers.referer;
+
 
 			// emit
             emit([isBot ? 'bot' : 'visitor', newsletter.date, newsletter.type, newsletter.city, newsletter.nid], emitData);
+            if(!isBot) emit(['referer', referer, newsletter.date, newsletter.type, newsletter.city, newsletter.nid], emitData);
 
         },
         reduce: "_count"
