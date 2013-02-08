@@ -1,8 +1,8 @@
 exports.lists = {
-    test: function(head, req) {
+    columns: function(head, req) {
 
-        //http://d.n13.cz:9090/zapa-tracking-test/_design/roll/_list/test/newsletter-visit?group_level=2&keySlice=-1&y=nav%C5%A1t%C4%9Bvy&title=Po%C4%8Dty%20n%C3%A1v%C5%A1t%C4%9Bv%20z%20jednotliv%C3%BDch%20newsletter%C5%AF
-        //http://d.n13.cz:9090/zapa-tracking-test/_design/roll/_list/test/newsletter-visit?startkey=[%22visitor%22,%221-2%22,%22a%22]&endkey[%22visitor%22,%221-2%22,%22a%22]&group_level=4&keySlice=-1&y=nav%C5%A1t%C4%9Bvy&title=Po%C4%8Dty%20n%C3%A1v%C5%A1t%C4%9Bv%20pro%20ur%C4%8Dit%C3%BD%20den%20podle%20m%C4%9Bst
+        //http://d.n13.cz:9090/zapa-tracking-test/_design/roll/_list/columns/newsletter-visit?group_level=2&keySlice=-1&y=nav%C5%A1t%C4%9Bvy&title=Po%C4%8Dty%20n%C3%A1v%C5%A1t%C4%9Bv%20z%20jednotliv%C3%BDch%20newsletter%C5%AF
+        //http://d.n13.cz:9090/zapa-tracking-test/_design/roll/_list/columns/newsletter-visit?startkey=[%22visitor%22,%221-2%22,%22a%22]&endkey[%22visitor%22,%221-2%22,%22a%22]&group_level=4&keySlice=-1&y=nav%C5%A1t%C4%9Bvy&title=Po%C4%8Dty%20n%C3%A1v%C5%A1t%C4%9Bv%20pro%20ur%C4%8Dit%C3%BD%20den%20podle%20m%C4%9Bst
 
         var handlebars = require('handlebars');
         var data = [];
@@ -13,7 +13,7 @@ exports.lists = {
             title: req.query.title,
             keySlice: req.query.keySlice || -1,
             data: []
-        }
+        };
 
         provides('html', function() {
 
@@ -121,35 +121,45 @@ exports.lists = {
 }
 
 exports.views = {
-    "referer-visit": {
+    "referrer-visit": {
         map: function(doc) {
             if (!doc.type || doc.type.indexOf("/type/access") === -1) return;
 
+			// referrer
+            var referrerId = doc.data.request.params['referrerId'];
+            if (!referrerId) {
+				emit(['noReferrerId']);
+				return;
+			}
 
-            var referer = doc.data.request.params['referrerId'];
-            if (!referer) return;
-
-            //time
+            // time
             var d = doc.time.replace(/[-TZ:.]/g, '-').split('-');
             var date = new Date(d[0], d[1] - 1, d[2], d[3], d[4]);
             date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
-            var de = [date.getFullYear(), date.getMonth() + 1, date.getDate(), date.getHours() /*, date.getMinutes()*/ ];
-            for (var i = 0; i < de.length; i++) {
-                de[i] = (de[i] < 10 ? '0' : '') + de[i];
+            var dateArr = [date.getFullYear(), date.getMonth() + 1, date.getDate(), date.getHours() /*, date.getMinutes()*/ ];
+            for (var t = 0; i < dateArr.length; t++) {
+                dateArr[t] = (dateArr[t] < 10 ? '0' : '') + dateArr[t];
             }
-
             //if(!(de[0] == "2013" && de[1] == "01")) return; //leden 2013
-            var emitData = {
-                _id: doc._id
-            };
 
+			// emitData
+			var emitData = 1;
+
+			// presenter:action
             var action = doc.data.request.presenter + ':' + doc.data.request.params['action'];
+
+			// user agent
             var userAgent = doc.data.headers['user-agent'].replace('User-Agent: ', ''); //firefox kiks, hm nebo parsováni?
+
+			// user agent type
             var userAgentType = doc.data.headers.from ? doc.data.headers.from : userAgent.replace(/^([a-z-]+).*$/i, "$1");
+
+			// bot ?
             var isBot = doc.data.headers.from || ["facebookexternalhit", "Jakarta"].indexOf(userAgent) >= 0;
 
-            emit([isBot ? 'bot' : 'visitor', referer].concat(de), emitData);
 
+			// emit
+            emit([isBot ? 'bot' : 'visitor', referrerId].concat(dateArr), emitData);
 
         },
 
@@ -163,45 +173,53 @@ exports.views = {
         map: function(doc) {
             if (!doc.type || doc.type.indexOf("/type/access") === -1) return;
 
-            //dealId
+            // dealId
             var dealId = doc.data.request.params['deal-id'] || doc.data.request.params['order-did'];
             if (!dealId || dealId === "0") {
                 return;
             }
 
+			// newsletter
+            var utm_campaign = doc.data.request.params.utm_campaign;
+            if (!utm_campaign || utm_campaign.indexOf('newsletter') == -1) return;
+            var data = utm_campaign.split(' ');
+            var newsletter = {};
+            for (var n = 0; n < data.length; n++) {
+                var tmp = data[n].split(':');
 
-            var newsletter = doc.data.request.params.utm_campaign;
-            if (!newsletter || newsletter.indexOf('newsletter') == -1) return;
-
-            var data = newsletter.split(' ');
-            var c = {};
-            for (var i = 0; i < data.length; i++) {
-                var tmp = data[i].split(':');
-
-                c[tmp[0]] = tmp[1];
+                newsletter[tmp[0]] = tmp[1];
             }
-            if (!c.date || !c.type || !c.nid || !c.city) return;
+            if (!newsletter.date || !newsletter.type || !newsletter.nid || !newsletter.city) return;
 
 
-            //time
+            // time
             var d = doc.time.replace(/[-TZ:.]/g, '-').split('-');
             var date = new Date(d[0], d[1] - 1, d[2], d[3], d[4]);
             date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
-            var de = [date.getFullYear(), date.getMonth() + 1, date.getDate(), date.getHours() /*, date.getMinutes()*/ ];
-            for (var i = 0; i < de.length; i++) {
-                de[i] = (de[i] < 10 ? '0' : '') + de[i];
+            var dateArr = [date.getFullYear(), date.getMonth() + 1, date.getDate(), date.getHours() /*, date.getMinutes()*/ ];
+            for (var t = 0; t < dateArr.length; t++) {
+                dateArr[t] = (dateArr[t] < 10 ? '0' : '') + dateArr[t];
             }
             //if(!(de[0] == "2013" && de[1] == "01")) return; //leden 2013
-            var emitData = {
-                _id: doc._id
-            };
 
+			// emitData
+            var emitData = 1;
+
+			// presenter:action
             var action = doc.data.request.presenter + ':' + doc.data.request.params['action'];
+
+			// user agent
             var userAgent = doc.data.headers['user-agent'].replace('User-Agent: ', ''); //firefox kiks, hm nebo parsováni?
+
+			// user agent type
             var userAgentType = doc.data.headers.from ? doc.data.headers.from : userAgent.replace(/^([a-z-]+).*$/i, "$1");
+
+			// bot ?
             var isBot = doc.data.headers.from || ["facebookexternalhit", "Jakarta"].indexOf(userAgent) >= 0;
 
-            emit([isBot ? 'bot' : 'visitor', c.date, c.type, c.city, c.nid], emitData);
+
+			// emit
+            emit([isBot ? 'bot' : 'visitor', newsletter.date, newsletter.type, newsletter.city, newsletter.nid], emitData);
 
         },
         reduce: "_count"
@@ -215,36 +233,47 @@ exports.views = {
         map: function(doc) {
             if (!doc.type || doc.type.indexOf("/type/access") === -1) return;
 
-            //dealId
+            // dealId
             var dealId = doc.data.request.params['deal-id'] || doc.data.request.params['order-did'];
             if (!dealId || dealId === "0") {
                 return;
             }
 
-            //time
+            // time
             var d = doc.time.replace(/[-TZ:.]/g, '-').split('-');
             var date = new Date(d[0], d[1] - 1, d[2], d[3], d[4]);
             date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
-            var de = [date.getFullYear(), date.getMonth() + 1, date.getDate(), date.getHours() /*, date.getMinutes() */ ];
-            for (var i = 0; i < de.length; i++) {
-                de[i] = (de[i] < 10 ? '0' : '') + de[i];
+            var dateArr = [date.getFullYear(), date.getMonth() + 1, date.getDate(), date.getHours() /*, date.getMinutes() */ ];
+            for (var t = 0; t < dateArr.length; t++) {
+                dateArr[t] = (dateArr[t] < 10 ? '0' : '') + dateArr[t];
             }
             //if(!(de[0] == "2013" && de[1] == "01")) return; //leden 2013
-            var emitData = {
-                _id: doc._id
-            };
 
+			// emitData
+            var emitData = 1;
+
+			// presenter:action
             var action = doc.data.request.presenter + ':' + doc.data.request.params['action'];
+
+			// user agent
             var userAgent = doc.data.headers['user-agent'].replace('User-Agent: ', ''); //firefox kiks, hm nebo parsováni?
+
+			// user agent type
             var userAgentType = doc.data.headers.from ? doc.data.headers.from : userAgent.replace(/^([a-z-]+).*$/i, "$1");
+
+			// bot ?
             var isBot = doc.data.headers.from || ["facebookexternalhit", "Jakarta"].indexOf(userAgent) >= 0;
 
+			// utm source
             var utmSource = doc.data.request.params['utm_source'] || null;
-            var referrerId = doc.data.request.params['referrerId'] || null;
-            emit([dealId, isBot ? 'bot' : 'visitor', action].concat(de), emitData);
 
-            if (isBot && utmSource) emit([dealId, 'source', utmSource].concat(de), emitData);
-            if (isBot && referrerId) emit([dealId, 'source', referrerId].concat(de), emitData);
+			// referrer id
+            var referrerId = doc.data.request.params['referrerId'] || null;
+
+			// emit
+            emit([dealId, isBot ? 'bot' : 'visitor', action].concat(dateArr), emitData);
+            if (isBot && utmSource) emit([dealId, 'source', utmSource].concat(dateArr), emitData);
+            if (isBot && referrerId) emit([dealId, 'source', referrerId].concat(dateArr), emitData);
 
         },
         reduce: "_count"
@@ -257,29 +286,31 @@ exports.views = {
         map: function(doc) {
             if (!doc.type || doc.type.indexOf("/type/access") === -1) return;
 
-            //time
+            // time
             var d = doc.time.replace(/[-TZ:.]/g, '-').split('-');
             var date = new Date(d[0], d[1] - 1, d[2], d[3], d[4]);
             date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
-            var de = [date.getFullYear(), date.getMonth() + 1, date.getDate(), date.getHours() /*, date.getMinutes()*/ ];
-            for (var i = 0; i < de.length; i++) {
-                de[i] = (de[i] < 10 ? '0' : '') + de[i];
+            var dateArr = [date.getFullYear(), date.getMonth() + 1, date.getDate(), date.getHours() /*, date.getMinutes()*/ ];
+            for (var t = 0; t < dateArr.length; t++) {
+                dateArr[t] = (dateArr[t] < 10 ? '0' : '') + dateArr[t];
             }
             //if(!(de[0] == "2013" && de[1] == "01")) return; //leden 2013
-            var emitData = {
-                _id: doc._id
-            };
 
-            //ip
+			// emitData
+            var emitData = 1;
+
+            // ip
             if (doc.data.request.ip) {
-                emit([doc.data.request.ip].concat(de), emitData);
+                emit([doc.data.request.ip].concat(dateArr), emitData);
             }
 
-            //cat
+            // cat
             var cat = doc.data.cat;
             if (!cat || ["undefined", ""].indexOf(cat) >= 0) cat = '[none]';
             if (cat == '[none]') return;
-            emit([cat].concat(de), emitData);
+
+			// emit
+            emit([cat].concat(dateArr), emitData);
 
         },
         reduce: "_count"
@@ -293,16 +324,18 @@ exports.views = {
         map: function(doc) {
             if (!doc.type || doc.type.indexOf("/type/access") === -1) return;
 
-            //time
+            // time
             var d = doc.time.replace(/[-TZ:.]/g, '-').split('-');
             var date = new Date(d[0], d[1] - 1, d[2], d[3], d[4]);
             date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
-            var de = [date.getFullYear(), date.getMonth() + 1, date.getDate(), date.getHours(), date.getMinutes()];
-            for (var i = 0; i < de.length; i++) {
-                de[i] = (de[i] < 10 ? '0' : '') + de[i];
+            var dateArr = [date.getFullYear(), date.getMonth() + 1, date.getDate(), date.getHours(), date.getMinutes()];
+            for (var t = 0; t < dateArr.length; t++) {
+                dateArr[t] = (dateArr[t] < 10 ? '0' : '') + dateArr[t];
             }
             //if(!(de[0] == "2013" && de[1] == "01")) return; //leden 2013
-            emit([doc.message].concat(de), parseInt(doc.duration, 10) * 10);
+
+			// emit
+            emit([doc.message].concat(dateArr), parseInt(doc.duration, 10) * 10);
         },
         reduce: "_stats"
     },
@@ -315,21 +348,22 @@ exports.views = {
 
 			if (!doc.data || !doc.data.duration) return;
 
-			//time
+			// time
 			var d = doc.time.replace(/[-TZ:.]/g, '-').split('-');
 			var date = new Date(d[0], d[1] - 1, d[2], d[3], d[4]);
 			date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
-			var de = [date.getFullYear(), date.getMonth() + 1, date.getDate(), date.getHours() /*, date.getMinutes()*/ ];
-			for (var i = 0; i < de.length; i++) {
-				de[i] = (de[i] < 10 ? '0' : '') + de[i];
+			var dateArr = [date.getFullYear(), date.getMonth() + 1, date.getDate(), date.getHours() /*, date.getMinutes()*/ ];
+			for (var t = 0; t < dateArr.length; t++) {
+				dateArr[t] = (dateArr[t] < 10 ? '0' : '') + dateArr[t];
 			}
 
+			// emit durations
 			var duration = doc.data.duration;
 			var dur;
 			for (var j = 0; j < duration.length; j++) {
 				dur = duration[j];
 				if(!dur.name || !dur.time) return;
-				emit([dur.name].concat(de), dur.time);
+				emit([dur.name].concat(dateArr), dur.time);
 			}
 		},
 		reduce: "_stats"
