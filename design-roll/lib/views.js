@@ -1,4 +1,7 @@
 exports.lists = {
+
+	/* ----------------------- GRAPH COLUMNS ---------------------------------- */
+
     columns: function(head, req) {
 
         //http://d.n13.cz:9090/zapa-tracking-test/_design/roll/_list/columns/newsletter-visit?group_level=2&keySlice=-1&y=nav%C5%A1t%C4%9Bvy&title=Po%C4%8Dty%20n%C3%A1v%C5%A1t%C4%9Bv%20z%20jednotliv%C3%BDch%20newsletter%C5%AF
@@ -39,6 +42,8 @@ exports.lists = {
         })
     },
 
+	/* ----------------------- GRAPH PIE ---------------------------------- */
+
 	pie: function(head, req) {
 
 		//http://d.n13.cz:9090/zapa-tracking/_design/roll/_list/pie/component-duration?group_level=1
@@ -76,6 +81,8 @@ exports.lists = {
 			return html;
 		})
 	},
+
+	/* ----------------------- GRAPH MULTISERIES ---------------------------------- */
 
 	multiseries: function(head, req) {
 
@@ -118,9 +125,13 @@ exports.lists = {
 			return html;
 		})
 	}
-}
+
+};
 
 exports.views = {
+
+	/* ----------------------- REFERRER VISIT ---------------------------------- */
+
     "referrer-visit": {
         map: function(doc) {
             if (!doc.type || doc.type.indexOf("/type/access") === -1) return;
@@ -226,7 +237,6 @@ exports.views = {
 
     /* ----------------------- DEAL VISIT ---------------------------------- */
 
-
     "deal-visit": {
         map: function(doc) {
             if (!doc.type || doc.type.indexOf("/type/access") === -1) return;
@@ -317,7 +327,6 @@ exports.views = {
 
     /* -----------------------TIME DURATION ---------------------------------- */
 
-
     "time": {
         map: function(doc) {
             if (!doc.type || doc.type.indexOf("/type/access") === -1) return;
@@ -340,6 +349,7 @@ exports.views = {
 
 
 	/* ----------------------- component duration ---------------------------------- */
+
 	"component-duration": {
 		map: function(doc) {
 			if (!doc.type || doc.type.indexOf("/type/access") === -1) return;
@@ -369,6 +379,7 @@ exports.views = {
 
 
 	/* ----------------------- agent ---------------------------------- */
+
 	"agent": {
 		map: function(doc) {
 			if (!doc.type || doc.type.indexOf("/type/access") === -1) return;
