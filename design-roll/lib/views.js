@@ -367,6 +367,41 @@ exports.views = {
 			}
 		},
 		reduce: "_stats"
+	},
+
+
+	/* ----------------------- agent ---------------------------------- */
+	"agent": {
+		map: function(doc) {
+			if (!doc.type || doc.type.indexOf("/type/access") === -1) return;
+
+			// emitData
+			var emitData = 1;
+
+			// time
+			var d = doc.time.replace(/[-TZ:.]/g, '-').split('-');
+			var date = new Date(d[0], d[1] - 1, d[2], d[3], d[4]);
+			date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+			var dateArr = [date.getFullYear(), date.getMonth() + 1, date.getDate(), date.getHours() /*, date.getMinutes()*/ ];
+			for (var t = 0; t < dateArr.length; t++) {
+				dateArr[t] = (dateArr[t] < 10 ? '0' : '') + dateArr[t];
+			}
+
+			// user agent
+			var userAgent = doc.data.headers['user-agent'].replace('User-Agent: ', ''); //firefox kiks, hm nebo parsováni?
+
+			// user agent type
+			var userAgentType = doc.data.headers.from ? doc.data.headers.from : userAgent.replace(/^([a-z-]+).*$/i, "$1");
+
+			// bot ?
+			var isBot = doc.data.headers.from || ["facebookexternalhit", "Jakarta"].indexOf(userAgent) >= 0;
+
+
+			// emit
+			emit([isBot ? 'bot' : 'visitor', userAgentType, userAgent].concat(dateArr), emitData);
+
+		},
+		reduce: "_stats"
 	}
 
 };
