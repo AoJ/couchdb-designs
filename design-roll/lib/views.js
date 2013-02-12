@@ -258,7 +258,7 @@ exports.views = {
             //if(!(de[0] == "2013" && de[1] == "01")) return; //leden 2013
 
 			// emitData
-            var emitData = 1;
+            var emitData = [1, doc.data.headers.from];
 
 			// presenter:action
             var action = doc.data.request.presenter + ':' + doc.data.request.params['action'];
@@ -270,7 +270,27 @@ exports.views = {
             var userAgentType = doc.data.headers.from ? doc.data.headers.from : userAgent.replace(/^([a-z-]+).*$/i, "$1");
 
 			// bot ?
-            var isBot = doc.data.headers.from || ["facebookexternalhit", "Jakarta"].indexOf(userAgent) >= 0;
+			var reg = new RegExp("(" + [
+					  " GoogleBot"
+					, " bingbot"
+					, "facebookexternalhit"
+					, "Jakarta"
+					, "AhrefsBot" // fb9bd5e29069bc930450366e729cd471
+					, "ia_archiver" // 780b34392f7545a2110665ae774c334c
+					, "Sogou web spider" // fb9bd5e29069bc930450366e7290fc31
+					, "Baiduspider" // fb9bd5e29069bc930450366e72b321e1
+					, "Seznam screenshot-generator" // fb9bd5e29069bc930450366e72929bb2
+					, "Yahoo! Slurp" // fb9bd5e29069bc930450366e729bb4c3
+					, "SeznamBot" // 9659bb07d1fa75d92d40ba688260539d
+					, "AdsBot-Google" // 780b34392f7545a2110665ae773e2f5b
+					, "bitlybot" // 9c87b0733d22837b4b1c0699810741a0
+					, "Feedfetcher-Google" // 9c87b0733d22837b4b1c06998160a13f
+					, "magpie-crawler" // 8b2bae1a27aaaf3d7c3b451987946eb1
+					, "Ezooms" // 9c87b0733d22837b4b1c069981b417c3
+					, "ExB Language Crawler" // 8b2bae1a27aaaf3d7c3b451987438852
+					, "TinEye-bot" // 780b34392f7545a2110665ae77177d77
+				].join("|") + ")", 'i');
+            var isBot = doc.data.headers.from || userAgent.match(reg);
 
 			// utm source
             var utmSource = doc.data.request.params['utm_source'] || null;
@@ -279,9 +299,9 @@ exports.views = {
             var referrerId = doc.data.request.params['referrerId'] || null;
 
 			// emit
-            emit([dealId, isBot ? 'bot' : 'visitor', action].concat(dateArr), emitData);
-            if (isBot && utmSource) emit([dealId, 'source', utmSource].concat(dateArr), emitData);
-            if (isBot && referrerId) emit([dealId, 'source', referrerId].concat(dateArr), emitData);
+            emit([dealId, isBot ? 'bot' : 'visitor', action, userAgent].concat(dateArr), emitData);
+            if (!isBot && utmSource) emit([dealId, 'source', utmSource].concat(dateArr), emitData);
+            if (!isBot && referrerId) emit([dealId, 'source', referrerId].concat(dateArr), emitData);
 
         },
         reduce: "_count"
