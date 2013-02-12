@@ -63,7 +63,7 @@ exports.lists = {
 			while (row = getRow()) {
 				data.push({
 					name: row.key.slice(options.keySlice),
-					value: row.value.sum ? row.value.sum : row.value
+					value: row.value.sum ? row.value.sum / row.value.count : row.value
 				});
 			}
 
@@ -360,18 +360,19 @@ exports.views = {
 			var d = doc.time.replace(/[-TZ:.]/g, '-').split('-');
 			var date = new Date(d[0], d[1] - 1, d[2], d[3], d[4]);
 			date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
-			var dateArr = [date.getFullYear(), date.getMonth() + 1, date.getDate(), date.getHours() /*, date.getMinutes()*/ ];
+			var dateArr = [date.getFullYear(), date.getMonth() + 1, date.getDate(), date.getHours(), date.getMinutes()];
 			for (var t = 0; t < dateArr.length; t++) {
 				dateArr[t] = (dateArr[t] < 10 ? '0' : '') + dateArr[t];
 			}
 
 			// emit durations
 			var duration = doc.data.duration;
-			var dur;
+			var dur, fl;
 			for (var j = 0; j < duration.length; j++) {
 				dur = duration[j];
 				if(!dur.name || !dur.time) return;
-				emit([dur.name].concat(dateArr), dur.time);
+				fl = parseInt((dur.time*1000).toFixed(3));
+				emit([dur.name].concat(dateArr), fl);
 			}
 		},
 		reduce: "_stats"
