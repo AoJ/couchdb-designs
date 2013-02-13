@@ -239,7 +239,7 @@ exports.views = {
 
     "deal-visit": {
         map: function(doc) {
-            if (!doc.type || doc.type.indexOf("/type/access") === -1) return;
+			if (!doc.type || doc.type.indexOf("/type/access") === -1) return;
 
             // dealId
             var dealId = doc.data.request.params['deal-id'] || doc.data.request.params['order-did'];
@@ -258,7 +258,7 @@ exports.views = {
             //if(!(de[0] == "2013" && de[1] == "01")) return; //leden 2013
 
 			// emitData
-            var emitData = [1, doc.data.headers.from];
+            var emitData = 1;
 
 			// presenter:action
             var action = doc.data.request.presenter + ':' + doc.data.request.params['action'];
@@ -269,10 +269,10 @@ exports.views = {
 			// user agent type
             var userAgentType = doc.data.headers.from ? doc.data.headers.from : userAgent.replace(/^([a-z-]+).*$/i, "$1");
 
-			// bot ?
+			// bot @todo rozkopirovat rozpoznani botu do dalsich mist
 			var reg = new RegExp("(" + [
-					  " GoogleBot"
-					, " bingbot"
+					  "GoogleBot"
+					, "bingbot"
 					, "facebookexternalhit"
 					, "Jakarta"
 					, "AhrefsBot" // fb9bd5e29069bc930450366e729cd471
@@ -289,19 +289,32 @@ exports.views = {
 					, "Ezooms" // 9c87b0733d22837b4b1c069981b417c3
 					, "ExB Language Crawler" // 8b2bae1a27aaaf3d7c3b451987438852
 					, "TinEye-bot" // 780b34392f7545a2110665ae77177d77
+					, "YandexBot" // fb9bd5e29069bc930450366e72aefa92
+					, "Exabot" // 780b34392f7545a2110665ae77194faf
 				].join("|") + ")", 'i');
-            var isBot = doc.data.headers.from || userAgent.match(reg);
+            var botMatch = (doc.data.headers.from + userAgent).match(reg);
+            var isBot = botMatch || doc.data.headers.from;
+			var bot = botMatch ? botMatch.shift() : null;
 
 			// utm source
             var utmSource = doc.data.request.params['utm_source'] || null;
 
+			// referrer domain at 2nd level, i.e. "xx.yy"
+			var referrer = doc.data.headers.referer;
+			var matches = (referrer) ? referrer.match(/^https?\:\/\/(([^\/]*\.)|)([^\/?#\.]+\.[^\/?#\.]+)(?:[\/?#]|$)/i) : null;
+			var referrerDomain = (referrer && matches)? matches[3] : null;
+
 			// referrer id
             var referrerId = doc.data.request.params['referrerId'] || null;
 
-			// emit
-            emit([dealId, isBot ? 'bot' : 'visitor', action, userAgent].concat(dateArr), emitData);
-            if (!isBot && utmSource) emit([dealId, 'source', utmSource].concat(dateArr), emitData);
-            if (!isBot && referrerId) emit([dealId, 'source', referrerId].concat(dateArr), emitData);
+			// emit @todo odkomentovat dealId
+            if(isBot) emit([/*dealId, */'bot', bot, doc.data.headers.from, action].concat(dateArr), emitData);
+            if(!isBot) emit([/*dealId, */'visitor', action].concat(dateArr), emitData);
+			if (!isBot && utmSource) emit([/*dealId, */'source', utmSource, referrerDomain].concat(dateArr), emitData);
+			if (!isBot && !utmSource && referrerId) emit([/*dealId, */'source', referrerId, referrerDomain].concat(dateArr), emitData);
+
+			// index pro zobrazeni utmSources+referrer v case
+//			if (!isBot && utmSource) emit([utmSource, referrerDomain].concat(dateArr), emitData);
 
         },
         reduce: "_count"
