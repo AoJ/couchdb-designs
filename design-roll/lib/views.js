@@ -291,13 +291,23 @@ exports.views = {
 					, "TinEye-bot" // 780b34392f7545a2110665ae77177d77
 					, "YandexBot" // fb9bd5e29069bc930450366e72aefa92
 					, "Exabot" // 780b34392f7545a2110665ae77194faf
+					, "spbot" // fb9bd5e29069bc930450366e7294d802
 				].join("|") + ")", 'i');
             var botMatch = (doc.data.headers.from + userAgent).match(reg);
             var isBot = botMatch || doc.data.headers.from;
 			var bot = botMatch ? botMatch.shift() : null;
 
 			// utm source
-            var utmSource = doc.data.request.params['utm_source'] || null;
+			var utmSource = doc.data.request.params['utm_source'] || null;
+
+			// utm medium
+			var utmMedium = doc.data.request.params['utm_medium'] || null;
+
+			// utm content
+			var utmContent = doc.data.request.params['utm_content'] || null;
+
+			// fb source
+			var fbSource = doc.data.request.params['fb_source'] || null;
 
 			// referrer domain at 2nd level, i.e. "xx.yy"
 			var referrer = doc.data.headers.referer;
@@ -305,13 +315,30 @@ exports.views = {
 			var referrerDomain = (referrer && matches)? matches[3] : null;
 
 			// referrer id
-            var referrerId = doc.data.request.params['referrerId'] || null;
+			var referrerId = doc.data.request.params['referrerId'] || null;
 
-			// emit @todo odkomentovat dealId
-            if(isBot) emit([/*dealId, */'bot', bot, doc.data.headers.from, action].concat(dateArr), emitData);
+
+			// emit bot action  @todo odkomentovat dealId
+            if(isBot) emit([/*dealId, */'bot', action].concat(dateArr), emitData);
+
+			// emit visitor action  @todo odkomentovat dealId
             if(!isBot) emit([/*dealId, */'visitor', action].concat(dateArr), emitData);
-			if (!isBot && utmSource) emit([/*dealId, */'source', utmSource, referrerDomain].concat(dateArr), emitData);
-			if (!isBot && !utmSource && referrerId) emit([/*dealId, */'source', referrerId, referrerDomain].concat(dateArr), emitData);
+
+			// emit visitor source  @todo odkomentovat dealId
+			if (!isBot){
+				var source;
+				if(utmSource && utmSource != 'affiliate') source = utmSource;
+				if(!source && referrerDomain) source = referrerDomain;
+				if(!source && utmMedium) source = utmMedium;
+				if(!source && referrerId) source = referrerId;
+				if(!source && utmContent) source = utmContent;
+				if(!source && fbSource) source = 'facebook';
+
+				if(source && source != 'zapakatel.cz' && source != 'zabagatel.sk') emit([/*dealId, */'source', source].concat(dateArr), emitData);
+			}
+
+			// emit name of bot  @todo odkomentovat dealId
+//            if(isBot) emit([/*dealId, */'botName', bot, action].concat(dateArr), emitData);
 
 			// index pro zobrazeni utmSources+referrer v case
 //			if (!isBot && utmSource) emit([utmSource, referrerDomain].concat(dateArr), emitData);
