@@ -2,45 +2,45 @@ exports.lists = {
 
 	/* ----------------------- GRAPH COLUMNS ---------------------------------- */
 
-    columns: function(head, req) {
+	columns: function(head, req) {
 
-        //http://d.n13.cz:9090/zapa-tracking-test/_design/roll/_list/columns/newsletter-visit?group_level=2&keySlice=-1&y=nav%C5%A1t%C4%9Bvy&title=Po%C4%8Dty%20n%C3%A1v%C5%A1t%C4%9Bv%20z%20jednotliv%C3%BDch%20newsletter%C5%AF
-        //http://d.n13.cz:9090/zapa-tracking-test/_design/roll/_list/columns/newsletter-visit?startkey=[%22visitor%22,%221-2%22,%22a%22]&endkey[%22visitor%22,%221-2%22,%22a%22]&group_level=4&keySlice=-1&y=nav%C5%A1t%C4%9Bvy&title=Po%C4%8Dty%20n%C3%A1v%C5%A1t%C4%9Bv%20pro%20ur%C4%8Dit%C3%BD%20den%20podle%20m%C4%9Bst
+		//http://d.n13.cz:9090/zapa-tracking-test/_design/roll/_list/columns/newsletter-visit?group_level=2&keySlice=-1&y=nav%C5%A1t%C4%9Bvy&title=Po%C4%8Dty%20n%C3%A1v%C5%A1t%C4%9Bv%20z%20jednotliv%C3%BDch%20newsletter%C5%AF
+		//http://d.n13.cz:9090/zapa-tracking-test/_design/roll/_list/columns/newsletter-visit?startkey=[%22visitor%22,%221-2%22,%22a%22]&endkey[%22visitor%22,%221-2%22,%22a%22]&group_level=4&keySlice=-1&y=nav%C5%A1t%C4%9Bvy&title=Po%C4%8Dty%20n%C3%A1v%C5%A1t%C4%9Bv%20pro%20ur%C4%8Dit%C3%BD%20den%20podle%20m%C4%9Bst
 
-        var handlebars = require('handlebars');
-        var data = [];
-        var row;
+		var handlebars = require('handlebars');
+		var data = [];
+		var row;
 
-        var options = {
-            labelY: req.query.y,
-            title: req.query.title,
-            keySlice: req.query.keySlice || -1,
-            data: []
-        };
+		var options = {
+			labelY: req.query.y,
+			title: req.query.title,
+			keySlice: req.query.keySlice || -1,
+			data: []
+		};
 
-        provides('html', function() {
+		provides('html', function() {
 
-            while (row = getRow()) {
-                data.push({
-                    value: row.value,
-                    label: row.key.slice(options.keySlice)
-                });
-            }
+			while (row = getRow()) {
+				data.push({
+					value: row.value,
+					label: row.key.slice(options.keySlice)
+				});
+			}
 
-            options.data = JSON.stringify(data);
+			options.data = JSON.stringify(data);
 
-            // handlebars.templates contains any templates loaded from the template directory in your
-            // kanso.json, if you're not using the build-steps then this will not exist.
-            var html = handlebars.templates['graph_columns.tpl'](options);
+			// handlebars.templates contains any templates loaded from the template directory in your
+			// kanso.json, if you're not using the build-steps then this will not exist.
+			var html = handlebars.templates['graph_columns.tpl'](options);
 
-            // if you haven't loaded any templates, you can compile your own
-            //var heading = handlebars.compile('<h1>{{title}}</h1>');
-            //var h1 = heading({
-            //    title: 'Hello, world!'
-            //});
-            return html;
-        })
-    },
+			// if you haven't loaded any templates, you can compile your own
+			//var heading = handlebars.compile('<h1>{{title}}</h1>');
+			//var h1 = heading({
+			//	title: 'Hello, world!'
+			//});
+			return html;
+		})
+	},
 
 	/* ----------------------- GRAPH PIE ---------------------------------- */
 
@@ -76,7 +76,7 @@ exports.lists = {
 			// if you haven't loaded any templates, you can compile your own
 			//var heading = handlebars.compile('<h1>{{title}}</h1>');
 			//var h1 = heading({
-			//    title: 'Hello, world!'
+			//	title: 'Hello, world!'
 			//});
 			return html;
 		})
@@ -120,7 +120,7 @@ exports.lists = {
 			// if you haven't loaded any templates, you can compile your own
 			//var heading = handlebars.compile('<h1>{{title}}</h1>');
 			//var h1 = heading({
-			//    title: 'Hello, world!'
+			//	title: 'Hello, world!'
 			//});
 			return html;
 		})
@@ -132,144 +132,181 @@ exports.views = {
 
 	/* ----------------------- REFERRER VISIT ---------------------------------- */
 
-    "referrer-visit": {
-        map: function(doc) {
-            if (!doc.type || doc.type.indexOf("/type/access") === -1) return;
+	"referrer-visit": {
+		map: function(doc) {
+			if (!doc.type || doc.type.indexOf("/type/access") === -1) return;
 
 			// referrer
-            var referrerId = doc.data.request.params['referrerId'];
-            if (!referrerId) {
+			var referrerId = doc.data.request.params['referrerId'];
+			if (!referrerId) {
 				emit(['noReferrerId']);
 				return;
 			}
 
-            // time
-            var d = doc.time.replace(/[-TZ:.]/g, '-').split('-');
-            var date = new Date(d[0], d[1] - 1, d[2], d[3], d[4]);
-            date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
-            var dateArr = [date.getFullYear(), date.getMonth() + 1, date.getDate(), date.getHours() /*, date.getMinutes()*/ ];
-            for (var t = 0; i < dateArr.length; t++) {
-                dateArr[t] = (dateArr[t] < 10 ? '0' : '') + dateArr[t];
-            }
-            //if(!(de[0] == "2013" && de[1] == "01")) return; //leden 2013
+			// time
+			var d = doc.time.replace(/[-TZ:.]/g, '-').split('-');
+			var date = new Date(d[0], d[1] - 1, d[2], d[3], d[4]);
+			date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+			var dateArr = [date.getFullYear(), date.getMonth() + 1, date.getDate(), date.getHours() /*, date.getMinutes()*/ ];
+			for (var t = 0; i < dateArr.length; t++) {
+				dateArr[t] = (dateArr[t] < 10 ? '0' : '') + dateArr[t];
+			}
+			//if(!(de[0] == "2013" && de[1] == "01")) return; //leden 2013
 
 			// emitData
 			var emitData = 1;
 
 			// presenter:action
-            var action = doc.data.request.presenter + ':' + doc.data.request.params['action'];
+			var action = doc.data.request.presenter + ':' + doc.data.request.params['action'];
 
-			// user agent
-            var userAgent = doc.data.headers['user-agent'].replace('User-Agent: ', ''); //firefox kiks, hm nebo parsováni?
-
-			// user agent type
-            var userAgentType = doc.data.headers.from ? doc.data.headers.from : userAgent.replace(/^([a-z-]+).*$/i, "$1");
-
-			// bot ?
-            var isBot = doc.data.headers.from || ["facebookexternalhit", "Jakarta"].indexOf(userAgent) >= 0;
-
+			// user agent & bot identification
+			var userAgent = doc.data.headers['user-agent'].replace('User-Agent: ', ''); //firefox kiks, hm nebo parsováni?
+			var userAgentType = doc.data.headers.from ? doc.data.headers.from : userAgent.replace(/^([a-z-]+).*$/i, "$1");
+			var reg = new RegExp("(" + [
+				"GoogleBot"
+				, "bingbot"
+				, "facebookexternalhit"
+				, "Jakarta"
+				, "AhrefsBot" // fb9bd5e29069bc930450366e729cd471
+				, "ia_archiver" // 780b34392f7545a2110665ae774c334c
+				, "Sogou web spider" // fb9bd5e29069bc930450366e7290fc31
+				, "Baiduspider" // fb9bd5e29069bc930450366e72b321e1
+				, "Seznam screenshot-generator" // fb9bd5e29069bc930450366e72929bb2
+				, "Yahoo! Slurp" // fb9bd5e29069bc930450366e729bb4c3
+				, "SeznamBot" // 9659bb07d1fa75d92d40ba688260539d
+				, "AdsBot-Google" // 780b34392f7545a2110665ae773e2f5b
+				, "bitlybot" // 9c87b0733d22837b4b1c0699810741a0
+				, "Feedfetcher-Google" // 9c87b0733d22837b4b1c06998160a13f
+				, "magpie-crawler" // 8b2bae1a27aaaf3d7c3b451987946eb1
+				, "Ezooms" // 9c87b0733d22837b4b1c069981b417c3
+				, "ExB Language Crawler" // 8b2bae1a27aaaf3d7c3b451987438852
+				, "TinEye-bot" // 780b34392f7545a2110665ae77177d77
+				, "YandexBot" // fb9bd5e29069bc930450366e72aefa92
+				, "Exabot" // 780b34392f7545a2110665ae77194faf
+				, "spbot" // fb9bd5e29069bc930450366e7294d802
+			].join("|") + ")", 'i');
+			var botMatch = (doc.data.headers.from + userAgent).match(reg);
+			var isBot = botMatch || doc.data.headers.from;
+			var bot = botMatch ? botMatch.shift() : null;
 
 			// emit
-            emit([isBot ? 'bot' : 'visitor', referrerId].concat(dateArr), emitData);
+			emit([isBot ? 'bot' : 'visitor', referrerId].concat(dateArr), emitData);
 
-        },
+		},
 
-        reduce: "_count"
-    },
+		reduce: "_count"
+	},
 
 
-    /* ----------------------- NEWSLETTER VISIT ---------------------------------- */
+	/* ----------------------- NEWSLETTER VISIT ---------------------------------- */
 
-    "newsletter-visit": {
-        map: function(doc) {
-            if (!doc.type || doc.type.indexOf("/type/access") === -1) return;
+	"newsletter-visit": {
+		map: function(doc) {
+			if (!doc.type || doc.type.indexOf("/type/access") === -1) return;
 
 			// newsletter
-            var utm_campaign = doc.data.request.params.utm_campaign;
-            if (!utm_campaign || utm_campaign.indexOf('newsletter') == -1) return;
-            var data = utm_campaign.split(' ');
-            var newsletter = {};
-            for (var n = 0; n < data.length; n++) {
-                var tmp = data[n].split(':');
+			var utm_campaign = doc.data.request.params.utm_campaign;
+			if (!utm_campaign || utm_campaign.indexOf('newsletter') == -1) return;
+			var data = utm_campaign.split(' ');
+			var newsletter = {};
+			for (var n = 0; n < data.length; n++) {
+				var tmp = data[n].split(':');
 
-                newsletter[tmp[0]] = tmp[1];
-            }
-            if (!newsletter.date || !newsletter.type || !newsletter.nid || !newsletter.city) return;
+				newsletter[tmp[0]] = tmp[1];
+			}
+			if (!newsletter.date || !newsletter.type || !newsletter.nid || !newsletter.city) return;
 
 
-            // time
-            var d = doc.time.replace(/[-TZ:.]/g, '-').split('-');
-            var date = new Date(d[0], d[1] - 1, d[2], d[3], d[4]);
-            date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
-            var dateArr = [date.getFullYear(), date.getMonth() + 1, date.getDate(), date.getHours() /*, date.getMinutes()*/ ];
-            for (var t = 0; t < dateArr.length; t++) {
-                dateArr[t] = (dateArr[t] < 10 ? '0' : '') + dateArr[t];
-            }
-            //if(!(de[0] == "2013" && de[1] == "01")) return; //leden 2013
+			// time
+			var d = doc.time.replace(/[-TZ:.]/g, '-').split('-');
+			var date = new Date(d[0], d[1] - 1, d[2], d[3], d[4]);
+			date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+			var dateArr = [date.getFullYear(), date.getMonth() + 1, date.getDate(), date.getHours() /*, date.getMinutes()*/ ];
+			for (var t = 0; t < dateArr.length; t++) {
+				dateArr[t] = (dateArr[t] < 10 ? '0' : '') + dateArr[t];
+			}
+			//if(!(de[0] == "2013" && de[1] == "01")) return; //leden 2013
 
 			// emitData
-            var emitData = 1;
+			var emitData = 1;
 
 			// presenter:action
-            var action = doc.data.request.presenter + ':' + doc.data.request.params['action'];
+			var action = doc.data.request.presenter + ':' + doc.data.request.params['action'];
 
-			// user agent
-            var userAgent = doc.data.headers['user-agent'].replace('User-Agent: ', ''); //firefox kiks, hm nebo parsováni?
-
-			// user agent type
-            var userAgentType = doc.data.headers.from ? doc.data.headers.from : userAgent.replace(/^([a-z-]+).*$/i, "$1");
-
-			// bot ?
-            var isBot = doc.data.headers.from || ["facebookexternalhit", "Jakarta"].indexOf(userAgent) >= 0;
+			// user agent & bot identification
+			var userAgent = doc.data.headers['user-agent'].replace('User-Agent: ', ''); //firefox kiks, hm nebo parsováni?
+			var userAgentType = doc.data.headers.from ? doc.data.headers.from : userAgent.replace(/^([a-z-]+).*$/i, "$1");
+			var reg = new RegExp("(" + [
+				"GoogleBot"
+				, "bingbot"
+				, "facebookexternalhit"
+				, "Jakarta"
+				, "AhrefsBot" // fb9bd5e29069bc930450366e729cd471
+				, "ia_archiver" // 780b34392f7545a2110665ae774c334c
+				, "Sogou web spider" // fb9bd5e29069bc930450366e7290fc31
+				, "Baiduspider" // fb9bd5e29069bc930450366e72b321e1
+				, "Seznam screenshot-generator" // fb9bd5e29069bc930450366e72929bb2
+				, "Yahoo! Slurp" // fb9bd5e29069bc930450366e729bb4c3
+				, "SeznamBot" // 9659bb07d1fa75d92d40ba688260539d
+				, "AdsBot-Google" // 780b34392f7545a2110665ae773e2f5b
+				, "bitlybot" // 9c87b0733d22837b4b1c0699810741a0
+				, "Feedfetcher-Google" // 9c87b0733d22837b4b1c06998160a13f
+				, "magpie-crawler" // 8b2bae1a27aaaf3d7c3b451987946eb1
+				, "Ezooms" // 9c87b0733d22837b4b1c069981b417c3
+				, "ExB Language Crawler" // 8b2bae1a27aaaf3d7c3b451987438852
+				, "TinEye-bot" // 780b34392f7545a2110665ae77177d77
+				, "YandexBot" // fb9bd5e29069bc930450366e72aefa92
+				, "Exabot" // 780b34392f7545a2110665ae77194faf
+				, "spbot" // fb9bd5e29069bc930450366e7294d802
+			].join("|") + ")", 'i');
+			var botMatch = (doc.data.headers.from + userAgent).match(reg);
+			var isBot = botMatch || doc.data.headers.from;
+			var bot = botMatch ? botMatch.shift() : null;
 
 			// header referer
 			var referer = doc.data.headers.referer;
 
 
 			// emit
-            emit([isBot ? 'bot' : 'visitor', newsletter.date, newsletter.type, newsletter.city, newsletter.nid], emitData);
-            if(!isBot) emit(['referer', referer, newsletter.date, newsletter.type, newsletter.city, newsletter.nid], emitData);
+			emit([isBot ? 'bot' : 'visitor', newsletter.date, newsletter.type, newsletter.city, newsletter.nid], emitData);
+			if(!isBot) emit(['referer', referer, newsletter.date, newsletter.type, newsletter.city, newsletter.nid], emitData);
 
-        },
-        reduce: "_count"
-    },
+		},
+		reduce: "_count"
+	},
 
 
-    /* ----------------------- DEAL VISIT ---------------------------------- */
+	/* ----------------------- DEAL VISIT ---------------------------------- */
 
-    "deal-visit": {
-        map: function(doc) {
+	"deal-visit": {
+		map: function(doc) {
 			if (!doc.type || doc.type.indexOf("/type/access") === -1) return;
 
-            // dealId
-            var dealId = doc.data.request.params['deal-id'] || doc.data.request.params['order-did'];
-            if (!dealId || dealId === "0") {
-                return;
-            }
+			// dealId
+			var dealId = doc.data.request.params['deal-id'] || doc.data.request.params['order-did'];
+			if (!dealId || dealId === "0") {
+				return;
+			}
 
-            // time
-            var d = doc.time.replace(/[-TZ:.]/g, '-').split('-');
-            var date = new Date(d[0], d[1] - 1, d[2], d[3], d[4]);
-            date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
-            var dateArr = [date.getFullYear(), date.getMonth() + 1, date.getDate(), date.getHours() /*, date.getMinutes() */ ];
-            for (var t = 0; t < dateArr.length; t++) {
-                dateArr[t] = (dateArr[t] < 10 ? '0' : '') + dateArr[t];
-            }
-            //if(!(de[0] == "2013" && de[1] == "01")) return; //leden 2013
+			// time
+			var d = doc.time.replace(/[-TZ:.]/g, '-').split('-');
+			var date = new Date(d[0], d[1] - 1, d[2], d[3], d[4]);
+			date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+			var dateArr = [date.getFullYear(), date.getMonth() + 1, date.getDate(), date.getHours() /*, date.getMinutes() */ ];
+			for (var t = 0; t < dateArr.length; t++) {
+				dateArr[t] = (dateArr[t] < 10 ? '0' : '') + dateArr[t];
+			}
+			//if(!(de[0] == "2013" && de[1] == "01")) return; //leden 2013
 
 			// emitData
-            var emitData = 1;
+			var emitData = 1;
 
 			// presenter:action
-            var action = doc.data.request.presenter + ':' + doc.data.request.params['action'];
+			var action = doc.data.request.presenter + ':' + doc.data.request.params['action'];
 
-			// user agent
-            var userAgent = doc.data.headers['user-agent'].replace('User-Agent: ', ''); //firefox kiks, hm nebo parsováni?
-
-			// user agent type
-            var userAgentType = doc.data.headers.from ? doc.data.headers.from : userAgent.replace(/^([a-z-]+).*$/i, "$1");
-
-			// bot @todo rozkopirovat rozpoznani botu do dalsich mist
+			// user agent & bot identification
+			var userAgent = doc.data.headers['user-agent'].replace('User-Agent: ', ''); //firefox kiks, hm nebo parsováni?
+			var userAgentType = doc.data.headers.from ? doc.data.headers.from : userAgent.replace(/^([a-z-]+).*$/i, "$1");
 			var reg = new RegExp("(" + [
 					  "GoogleBot"
 					, "bingbot"
@@ -293,20 +330,16 @@ exports.views = {
 					, "Exabot" // 780b34392f7545a2110665ae77194faf
 					, "spbot" // fb9bd5e29069bc930450366e7294d802
 				].join("|") + ")", 'i');
-            var botMatch = (doc.data.headers.from + userAgent).match(reg);
-            var isBot = botMatch || doc.data.headers.from;
+			var botMatch = (doc.data.headers.from + userAgent).match(reg);
+			var isBot = botMatch || doc.data.headers.from;
 			var bot = botMatch ? botMatch.shift() : null;
 
-			// utm source
+			// utm
 			var utmSource = doc.data.request.params['utm_source'] || null;
-
-			// utm medium
 			var utmMedium = doc.data.request.params['utm_medium'] || null;
-
-			// utm content
 			var utmContent = doc.data.request.params['utm_content'] || null;
 
-			// fb source
+			// facebook
 			var fbSource = doc.data.request.params['fb_source'] || null;
 
 			// referrer domain at 2nd level, i.e. "xx.yy"
@@ -317,95 +350,96 @@ exports.views = {
 			// referrer id
 			var referrerId = doc.data.request.params['referrerId'] || null;
 
+			// -- emit --
 
 			// emit bot action  @todo odkomentovat dealId
-            if(isBot) emit([/*dealId, */'bot', action].concat(dateArr), emitData);
+			if(isBot) emit([/*dealId, */'bot', action].concat(dateArr), emitData);
 
 			// emit visitor action  @todo odkomentovat dealId
-            if(!isBot) emit([/*dealId, */'visitor', action].concat(dateArr), emitData);
+			if(!isBot) emit([/*dealId, */'visitor', action].concat(dateArr), emitData);
 
 			// emit visitor source  @todo odkomentovat dealId
 			if (!isBot){
 				var source;
 				if(utmSource && utmSource != 'affiliate') source = utmSource;
-				if(!source && referrerDomain) source = referrerDomain;
-				if(!source && utmMedium) source = utmMedium;
-				if(!source && referrerId) source = referrerId;
-				if(!source && utmContent) source = utmContent;
-				if(!source && fbSource) source = 'facebook';
+				else if(referrerDomain) source = referrerDomain;
+				else if(utmMedium) source = utmMedium;
+				else if(referrerId) source = referrerId;
+				else if(utmContent) source = utmContent;
+				else if(fbSource) source = 'facebook';
 
 				if(source && source != 'zapakatel.cz' && source != 'zabagatel.sk') emit([/*dealId, */'source', source].concat(dateArr), emitData);
 			}
 
 			// emit name of bot  @todo odkomentovat dealId
-//            if(isBot) emit([/*dealId, */'botName', bot, action].concat(dateArr), emitData);
+//			if(isBot) emit([/*dealId, */'botName', bot, action].concat(dateArr), emitData);
 
 			// index pro zobrazeni utmSources+referrer v case
 //			if (!isBot && utmSource) emit([utmSource, referrerDomain].concat(dateArr), emitData);
 
-        },
-        reduce: "_count"
-    },
+		},
+		reduce: "_count"
+	},
 
 
-    /* ----------------------- CAT IP ---------------------------------- */
+	/* ----------------------- CAT IP ---------------------------------- */
 
-    "cat-ip": {
-        map: function(doc) {
-            if (!doc.type || doc.type.indexOf("/type/access") === -1) return;
+	"cat-ip": {
+		map: function(doc) {
+			if (!doc.type || doc.type.indexOf("/type/access") === -1) return;
 
-            // time
-            var d = doc.time.replace(/[-TZ:.]/g, '-').split('-');
-            var date = new Date(d[0], d[1] - 1, d[2], d[3], d[4]);
-            date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
-            var dateArr = [date.getFullYear(), date.getMonth() + 1, date.getDate(), date.getHours() /*, date.getMinutes()*/ ];
-            for (var t = 0; t < dateArr.length; t++) {
-                dateArr[t] = (dateArr[t] < 10 ? '0' : '') + dateArr[t];
-            }
-            //if(!(de[0] == "2013" && de[1] == "01")) return; //leden 2013
+			// time
+			var d = doc.time.replace(/[-TZ:.]/g, '-').split('-');
+			var date = new Date(d[0], d[1] - 1, d[2], d[3], d[4]);
+			date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+			var dateArr = [date.getFullYear(), date.getMonth() + 1, date.getDate(), date.getHours() /*, date.getMinutes()*/ ];
+			for (var t = 0; t < dateArr.length; t++) {
+				dateArr[t] = (dateArr[t] < 10 ? '0' : '') + dateArr[t];
+			}
+			//if(!(de[0] == "2013" && de[1] == "01")) return; //leden 2013
 
 			// emitData
-            var emitData = 1;
+			var emitData = 1;
 
-            // ip
-            if (doc.data.request.ip) {
-                emit([doc.data.request.ip].concat(dateArr), emitData);
-            }
+			// ip
+			if (doc.data.request.ip) {
+				emit([doc.data.request.ip].concat(dateArr), emitData);
+			}
 
-            // cat
-            var cat = doc.data.cat;
-            if (!cat || ["undefined", ""].indexOf(cat) >= 0) cat = '[none]';
-            if (cat == '[none]') return;
-
-			// emit
-            emit([cat].concat(dateArr), emitData);
-
-        },
-        reduce: "_count"
-    },
-
-
-    /* -----------------------TIME DURATION ---------------------------------- */
-
-    "time": {
-        map: function(doc) {
-            if (!doc.type || doc.type.indexOf("/type/access") === -1) return;
-
-            // time
-            var d = doc.time.replace(/[-TZ:.]/g, '-').split('-');
-            var date = new Date(d[0], d[1] - 1, d[2], d[3], d[4]);
-            date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
-            var dateArr = [date.getFullYear(), date.getMonth() + 1, date.getDate(), date.getHours(), date.getMinutes()];
-            for (var t = 0; t < dateArr.length; t++) {
-                dateArr[t] = (dateArr[t] < 10 ? '0' : '') + dateArr[t];
-            }
-            //if(!(de[0] == "2013" && de[1] == "01")) return; //leden 2013
+			// cat
+			var cat = doc.data.cat;
+			if (!cat || ["undefined", ""].indexOf(cat) >= 0) cat = '[none]';
+			if (cat == '[none]') return;
 
 			// emit
-            emit([doc.message].concat(dateArr), parseInt(doc.duration, 10) * 10);
-        },
-        reduce: "_stats"
-    },
+			emit([cat].concat(dateArr), emitData);
+
+		},
+		reduce: "_count"
+	},
+
+
+	/* -----------------------TIME DURATION ---------------------------------- */
+
+	"time": {
+		map: function(doc) {
+			if (!doc.type || doc.type.indexOf("/type/access") === -1) return;
+
+			// time
+			var d = doc.time.replace(/[-TZ:.]/g, '-').split('-');
+			var date = new Date(d[0], d[1] - 1, d[2], d[3], d[4]);
+			date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+			var dateArr = [date.getFullYear(), date.getMonth() + 1, date.getDate(), date.getHours(), date.getMinutes()];
+			for (var t = 0; t < dateArr.length; t++) {
+				dateArr[t] = (dateArr[t] < 10 ? '0' : '') + dateArr[t];
+			}
+			//if(!(de[0] == "2013" && de[1] == "01")) return; //leden 2013
+
+			// emit
+			emit([doc.message].concat(dateArr), parseInt(doc.duration, 10) * 10);
+		},
+		reduce: "_stats"
+	},
 
 
 	/* ----------------------- component duration ---------------------------------- */
@@ -457,14 +491,35 @@ exports.views = {
 				dateArr[t] = (dateArr[t] < 10 ? '0' : '') + dateArr[t];
 			}
 
-			// user agent
+			// user agent & bot identification
 			var userAgent = doc.data.headers['user-agent'].replace('User-Agent: ', ''); //firefox kiks, hm nebo parsováni?
-
-			// user agent type
 			var userAgentType = doc.data.headers.from ? doc.data.headers.from : userAgent.replace(/^([a-z-]+).*$/i, "$1");
-
-			// bot ?
-			var isBot = doc.data.headers.from || ["facebookexternalhit", "Jakarta"].indexOf(userAgent) >= 0;
+			var reg = new RegExp("(" + [
+				"GoogleBot"
+				, "bingbot"
+				, "facebookexternalhit"
+				, "Jakarta"
+				, "AhrefsBot" // fb9bd5e29069bc930450366e729cd471
+				, "ia_archiver" // 780b34392f7545a2110665ae774c334c
+				, "Sogou web spider" // fb9bd5e29069bc930450366e7290fc31
+				, "Baiduspider" // fb9bd5e29069bc930450366e72b321e1
+				, "Seznam screenshot-generator" // fb9bd5e29069bc930450366e72929bb2
+				, "Yahoo! Slurp" // fb9bd5e29069bc930450366e729bb4c3
+				, "SeznamBot" // 9659bb07d1fa75d92d40ba688260539d
+				, "AdsBot-Google" // 780b34392f7545a2110665ae773e2f5b
+				, "bitlybot" // 9c87b0733d22837b4b1c0699810741a0
+				, "Feedfetcher-Google" // 9c87b0733d22837b4b1c06998160a13f
+				, "magpie-crawler" // 8b2bae1a27aaaf3d7c3b451987946eb1
+				, "Ezooms" // 9c87b0733d22837b4b1c069981b417c3
+				, "ExB Language Crawler" // 8b2bae1a27aaaf3d7c3b451987438852
+				, "TinEye-bot" // 780b34392f7545a2110665ae77177d77
+				, "YandexBot" // fb9bd5e29069bc930450366e72aefa92
+				, "Exabot" // 780b34392f7545a2110665ae77194faf
+				, "spbot" // fb9bd5e29069bc930450366e7294d802
+			].join("|") + ")", 'i');
+			var botMatch = (doc.data.headers.from + userAgent).match(reg);
+			var isBot = botMatch || doc.data.headers.from;
+			var bot = botMatch ? botMatch.shift() : null;
 
 
 			// emit
