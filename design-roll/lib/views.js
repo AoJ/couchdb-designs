@@ -352,13 +352,13 @@ exports.views = {
 
 			// -- emit --
 
-			// emit bot action  @todo odkomentovat dealId
-			if(isBot) emit([/*dealId, */'bot', action].concat(dateArr), emitData);
+			// emit bot action
+			if(isBot) emit([dealId, 'bot', action].concat(dateArr), emitData);
 
-			// emit visitor action  @todo odkomentovat dealId
-			if(!isBot) emit([/*dealId, */'visitor', action].concat(dateArr), emitData);
+			// emit visitor action
+			if(!isBot) emit([dealId, 'visitor', action].concat(dateArr), emitData);
 
-			// emit visitor source  @todo odkomentovat dealId
+			// emit visitor source
 			if (!isBot){
 				var source;
 				if(utmSource && utmSource != 'affiliate') source = utmSource;
@@ -368,11 +368,11 @@ exports.views = {
 				else if(utmContent) source = utmContent;
 				else if(fbSource) source = 'facebook';
 
-				if(source && source != 'zapakatel.cz' && source != 'zabagatel.sk') emit([/*dealId, */'source', source].concat(dateArr), emitData);
+				if(source && source != 'zapakatel.cz' && source != 'zabagatel.sk') emit([dealId, 'source', source].concat(dateArr), emitData);
 			}
 
-			// emit name of bot  @todo odkomentovat dealId
-//			if(isBot) emit([/*dealId, */'botName', bot, action].concat(dateArr), emitData);
+			// emit name of bot
+//			if(isBot) emit([dealId, 'botName', bot, action].concat(dateArr), emitData);
 
 			// index pro zobrazeni utmSources+referrer v case
 //			if (!isBot && utmSource) emit([utmSource, referrerDomain].concat(dateArr), emitData);
