@@ -183,6 +183,7 @@ exports.views = {
 					, "YandexBot" // fb9bd5e29069bc930450366e72aefa92
 					, "Exabot" // 780b34392f7545a2110665ae77194faf
 					, "spbot" // fb9bd5e29069bc930450366e7294d802
+					, "MJ12bot" // 52f56722ed8098110aaf36fb02b61dba
 				].join("|") + ")", 'i');
 			var botMatch = (doc.data.headers.from + userAgent).match(reg);
 			var isBot = botMatch || doc.data.headers.from;
