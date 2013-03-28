@@ -414,7 +414,7 @@ exports.views = {
                 else if (fbSource) source = 'facebook';
 
                 if (source) {
-                    var type = ['zapakatel.cz', 'zabagatel.sk'].idnexOf(source) >= 0 ? 'inter' : 'source';
+                    var type = ['zapakatel.cz', 'zabagatel.sk'].indexOf(source) >= 0 ? 'inter' : 'source';
                     emit([dealId, type, action, source].concat(de), emitData);
                 }
             }
