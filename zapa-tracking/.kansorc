@@ -1,8 +1,8 @@
 exports.env = {
-    'default_2': {
-        db: 'http://kanso:kanso3@d.n13.cz:9090/zapa-tracking-test'
-    },
     'default': {
-    	db: 'http://kanso:xxx@itchy.allin1.cz:9090/zapa-tracking-2013-march'
+        db: 'http://kanso:kanso3@d.n13.cz:9090/zapa-tracking'
+    },
+    'xdefault': {
+    	db: 'http://kanso:6U@itchy.allin1.cz:9090/zapa-tracking-2013-january'
     }
 };

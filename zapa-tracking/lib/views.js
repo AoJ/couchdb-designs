@@ -35,7 +35,7 @@ exports.lists = {
             // if you haven't loaded any templates, you can compile your own
             //var heading = handlebars.compile('<h1>{{title}}</h1>');
             //var h1 = heading({
-            //	title: 'Hello, world!'
+            //  title: 'Hello, world!'
             //});
             return html;
         })
@@ -74,7 +74,7 @@ exports.lists = {
             // if you haven't loaded any templates, you can compile your own
             //var heading = handlebars.compile('<h1>{{title}}</h1>');
             //var h1 = heading({
-            //	title: 'Hello, world!'
+            //  title: 'Hello, world!'
             //});
             return html;
         })
@@ -120,11 +120,19 @@ exports.lists = {
             // if you haven't loaded any templates, you can compile your own
             //var heading = handlebars.compile('<h1>{{title}}</h1>');
             //var h1 = heading({
-            //	title: 'Hello, world!'
+            //  title: 'Hello, world!'
             //});
             return html;
         })
-    }
+    },
+
+    newsletter: function(head, req) {
+        var count = 0;
+        while (row = getRow()) {
+            count++;
+        }
+        return '' + count;
+    },
 
 };
 
@@ -135,6 +143,9 @@ exports.views = {
     "referrer-visit": {
         map: function(doc) {
             if (!doc.type || doc.type.indexOf("/type/access") === -1) return;
+
+            //uplatnito blacklist
+            if(doc.ip === '81.91.92.26') return;
 
 
             var referer = doc.data.request.params['referrerId'];
@@ -201,6 +212,9 @@ exports.views = {
     "newsletter-visit": {
         map: function(doc) {
             if (!doc.type || doc.type.indexOf("/type/access") === -1) return;
+
+            //uplatnito blacklist
+            if(doc.ip === '81.91.92.26') return;
 
 
             //open track
@@ -310,6 +324,9 @@ exports.views = {
         map: function(doc) {
             if (!doc.type || doc.type.indexOf("/type/access") === -1) return;
 
+            //uplatnito blacklist
+            if(doc.ip === '81.91.92.26') return;
+
             // dealId
             var dealId = doc.data.request.params['deal-id'] || doc.data.request.params['order-did'];
             if (!dealId || dealId === "0") {
@@ -412,6 +429,9 @@ exports.views = {
         map: function(doc) {
             if (!doc.type || doc.type.indexOf("/type/access") === -1) return;
 
+            //uplatnito blacklist
+            if(doc.ip === '81.91.92.26') return;
+
             // time
             var d = doc.time.replace(/[-TZ:.]/g, '-').split('-');
             var date = new Date(d[0], d[1] - 1, d[2], d[3], d[4]);
@@ -459,6 +479,63 @@ exports.views = {
             }
             isBot = doc.data.headers.from || botMatch;
 
+            // utm
+            var utmSource = doc.data.request.params['utm_source'] || null;
+            var utmMedium = doc.data.request.params['utm_medium'] || null;
+            var utmContent = doc.data.request.params['utm_content'] || null;
+
+            // facebook
+            var fbSource = doc.data.request.params['fb_source'] || null;
+
+            // referrer domain at 2nd level, i.e. "xx.yy"
+            var referrer = doc.data.headers.referer;
+            var matches = referrer ? referrer.match(/^https?\:\/\/(([^\/]*\.)|)([^\/?#\.]+\.[^\/?#\.]+)(?:[\/?#]|$)/i) : null;
+            var referrerDomain = (referrer && matches) ? matches[3] : null;
+
+            // referrer id
+            var referrerId = doc.data.request.params['referrerId'] || null;
+
+
+            // emit visitor source
+            var source;
+            if (utmSource && utmSource != 'affiliate') source = utmSource;
+            else if (referrerDomain) source = referrerDomain;
+            else if (utmMedium) source = utmMedium;
+            else if (referrerId) source = referrerId;
+            else if (utmContent) source = utmContent;
+            else if (fbSource) source = 'facebook';
+
+            var type = ['zapakatel.cz', 'zabagatel.sk'].indexOf(source) >= 0 ? 'inter' : 'source';
+            if (type === 'inter') source = null;
+
+            //parse query
+            var search;
+            if (referrer) {
+                var queries = referrer.split('?')[1];
+                if (queries) {
+                    var pairs = queries.split('&');
+                    for (var k = 0; k < pairs.length; k++) {
+                        var values = pairs[k].split('=');
+                        if (values[0] === 'q') search = decodeURIComponent(values[1]).replace(/\ /gi, "+");
+                    }
+                }
+
+            }
+
+
+            var place = doc.message;
+            var placeArray = [];
+            var dealId = doc.data.request.params['deal-id'] || doc.data.request.params['order-did'];
+            if (!dealId && place.indexOf('Deal:') > -1) {
+                dealId = doc.data.request.params['id'];
+            }
+            if (dealId) place += ', ' + dealId;
+            if (doc.data.request.params['href']) place += ', target ' + doc.data.request.params['href']
+
+            if (source) place += ', from ' + source;
+            if (search) place += ' (' + search + ')';
+            emitData = isBot ? null : [date.getTime(), place];
+
             // ip
             if (doc.data.request.ip) {
                 emit([doc.data.request.ip, isBot ? 'b' : 'v'].concat(de), emitData);
@@ -470,7 +547,8 @@ exports.views = {
             if (cat == '[none]') return;
 
             // emit
-            emit([cat, isBot ? 'b' : 'v'].concat(de), emitData);
+            if (!isBot && cat) emit([cat, isBot ? 'b' : 'v'].concat(de), emitData);
+
 
         },
         reduce: "_count"
@@ -482,6 +560,9 @@ exports.views = {
     "time": {
         map: function(doc) {
             if (!doc.type || doc.type.indexOf("/type/access") === -1) return;
+
+            //uplatnito blacklist
+            if(doc.ip === '81.91.92.26') return;
 
             // time
             var d = doc.time.replace(/[-TZ:.]/g, '-').split('-');
