@@ -1,6 +1,6 @@
 {
-    "name": "visits",
-    "version": "0.0.1",
+    "name": "stats",
+    "version": "0.0.2",
     "description": "Zapa tracking views for rolling visits",
     "modules": ["lib"],
     "load": "lib/views",
