@@ -50,6 +50,7 @@ exports.lists = {
 
         //http://d.n13.cz:9090/feed-watchman/_design/roll/_list/deal-progress/counts-by-deal?startkey=[%22berslevu%22,%222866%22]&endkey=[%22berslevu%22,%222866%22,{}]
         //http://d.n13.cz:9090/feed-watchman/_design/roll/_list/deal-progress/counts-by-deal?startkey=[%22berslevu%22,%223002%22]&endkey=[%22berslevu%22,%223002%22,{}]
+        //http://couch.allin1.cz:9090/feed-watchman/_design/roll/_list/deal-progress/counts-by-deal?startkey=[%22berslevu%22,%222866%22]&endkey=[%22berslevu%22,%222866%22,{}]&stale=ok
 
         var handlebars = require('handlebars');
         var data = [];
@@ -84,11 +85,11 @@ exports.lists = {
 
                 data1.push({
                     value: row.value.total_price,
-                    label: date[0] + ':' + hour
+                    label: date[0]
                 });
                 data2.push({
                     value: row.value.customers,
-                    label: date[0] + ':' + hour
+                    label: date[0]
                 });
                 last = row;
             }
@@ -100,6 +101,71 @@ exports.lists = {
             // handlebars.templates contains any templates loaded from the template directory in your
             // kanso.json, if you're not using the build-steps then this will not exist.
             var html = handlebars.templates['graph_multilines.tpl'](options);
+
+            // if you haven't loaded any templates, you can compile your own
+            //var heading = handlebars.compile('<h1>{{title}}</h1>');
+            //var h1 = heading({
+            //    title: 'Hello, world!'
+            //});
+            return html;
+        })
+    },
+
+
+    //todo
+    "deal-table": function(head, req) {
+
+        //todo
+
+        //http://d.n13.cz:9090/feed-watchman/_design/roll/_list/deal-progress/counts-by-deal?startkey=[%22berslevu%22,%222866%22]&endkey=[%22berslevu%22,%222866%22,{}]
+        //http://d.n13.cz:9090/feed-watchman/_design/roll/_list/deal-progress/counts-by-deal?startkey=[%22berslevu%22,%223002%22]&endkey=[%22berslevu%22,%223002%22,{}]
+        //http://couch.allin1.cz:9090/feed-watchman/_design/roll/_list/deal-progress/counts-by-deal?startkey=[%22berslevu%22,%222866%22]&endkey=[%22berslevu%22,%222866%22,{}]&stale=ok
+
+        var handlebars = require('handlebars');
+        var data = [];
+        var data1 = [];
+        var data2 = [];
+        var row;
+        var first;
+        var last;
+
+        var options = {
+            labelY: req.query.y,
+            title: req.query.title,
+            keySlice: req.query.keySlice || -1,
+            data1: [],
+            data2: [],
+            data: []
+        }
+
+        provides('html', function() {
+
+            data.push('<tr><th>Datum</th><th>Počet nakupujících</th><th>Celkem vybráno</th><th>Relativní počet kupujících</th><th>Relativně vybráno</th></tr>');
+            while (row = getRow()) {
+                if (!first) {
+                    first = row;
+                    last = row
+                }
+
+                var date = row.value.date.split(' ');
+                var hour = date[1].split(':')[0];
+
+                //pošleme dál pouze data, kdy se něco změnilo
+                if(last.value.total_price === row.value.total_price ) continue;
+
+                var relativeCustomers = row.value.customers - first.value.customers;
+                var relativePrice = row.value.total_price - first.value.total_price;
+
+                data.push('<tr><td>'+([date[0] + ' ' + hour + ':00', row.value.customers, row.value.total_price, relativeCustomers, relativePrice].join('</td><td>'))+'</td></tr>');
+
+                last = row;
+            }
+
+            options.data = data.join("\n");
+
+            // handlebars.templates contains any templates loaded from the template directory in your
+            // kanso.json, if you're not using the build-steps then this will not exist.
+            var html = handlebars.templates['table_simple.tpl'](options);
 
             // if you haven't loaded any templates, you can compile your own
             //var heading = handlebars.compile('<h1>{{title}}</h1>');
