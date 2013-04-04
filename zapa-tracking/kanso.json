@@ -12,7 +12,6 @@
     	"attachments": null,
         "properties": null,
         "modules": null,
-        "handlebars": null,
-		"underscore": null
+        "handlebars": null
     }
 }

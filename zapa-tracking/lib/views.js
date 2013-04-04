@@ -343,7 +343,7 @@ exports.views = {
             }
 
             // emitData
-            var emitData = 1;
+            var emitData = null;
 
             // presenter:action
             var action = doc.data.request.presenter + ':' + doc.data.request.params['action'];
@@ -390,22 +390,24 @@ exports.views = {
 
             // referrer domain at 2nd level, i.e. "xx.yy"
             var referrer = doc.data.headers.referer;
-            var matches = referrer ? referrer.match(/^https?\:\/\/(([^\/]*\.)|)([^\/?#\.]+\.[^\/?#\.]+)(?:[\/?#]|$)/i) : null;
+            var matches = referrer ? referrer.match(/^https?\:\/\/(([^\/]*\.)|)([^\/?#\.]+\.[^\/?#\.]+)(?:[\/?#]|$)/i) : null; //WTF, TODO rewrite and commment it
             var referrerDomain = (referrer && matches) ? matches[3] : null;
+
 
             // referrer id
             var referrerId = doc.data.request.params['referrerId'] || null;
 
             // -- emit --
             // emit bot action
-            if (isBot) emit([dealId, 'bot', action].concat(de), emitData);
+            //if (isBot) emit([dealId, 'bot', action].concat(de), emitData);
 
             // emit visitor action
-            if (!isBot) emit([dealId, 'visitor', action].concat(de), emitData);
+            //if (!isBot) emit([dealId, 'visitor', action].concat(de), emitData);
 
             // emit visitor source
             if (!isBot) {
                 var source;
+                var localPage;
                 if (utmSource && utmSource != 'affiliate') source = utmSource;
                 else if (referrerDomain) source = referrerDomain;
                 else if (utmMedium) source = utmMedium;
@@ -415,7 +417,35 @@ exports.views = {
 
                 if (source) {
                     var type = ['zapakatel.cz', 'zabagatel.sk'].indexOf(source) >= 0 ? 'inter' : 'source';
-                    emit([dealId, type, action, source].concat(de), emitData);
+
+                    if(type == 'inter') {
+                        var typeId = null;
+
+
+                        var refererDeal = referrer.match(/.*detail\/id\-([0-9]+)\-\-.*/i);
+                        var refererCategory = referrer.match(/.*kategorie\/([a-z-]+).*/i);
+                        var refererTag = referrer.match(/.*tag\/([a-z-]+).*/i);
+
+                        if(refererDeal) {
+                            localPage = 'detail';
+                            typeId = refererDeal[1];
+                        }
+                        if(refererCategory) {
+                            localPage = 'category';
+                            typeId = refererCategory[1];
+                        }
+                        if(refererTag) {
+                            localPage = 'tag';
+                            typeId = refererTag[1];
+                        }
+
+                        if(localPage) {
+                            emitData = { from: localPage, id: typeId };
+                        }
+                    }
+
+                    if(localPage) emit([dealId, type, action, source, localPage].concat(de), emitData);
+                    //else emit([dealId, type, action, source].concat(de), emitData);
                 }
             }
         },
