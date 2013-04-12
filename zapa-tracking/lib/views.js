@@ -310,7 +310,7 @@ exports.views = {
             };
 
             // emit
-            emit([type, de[0] + '-' + newsletter.date, newsletter.city, newsletter.nid], emitData);
+            emit([type, de[0] + '-' + newsletter.date, newsletter.city, newsletter.nid, parseInt(de.join(''))], emitData);
             if (!isBot && referrerDomain) emit(['referer', type, referrerDomain, de[0] + '-' + newsletter.date, newsletter.city, newsletter.nid], emitData);
 
         },
@@ -399,10 +399,10 @@ exports.views = {
 
             // -- emit --
             // emit bot action
-            //if (isBot) emit([dealId, 'bot', action].concat(de), emitData);
+            if (isBot) emit([dealId, 'bot', action].concat(de), emitData);
 
             // emit visitor action
-            //if (!isBot) emit([dealId, 'visitor', action].concat(de), emitData);
+            if (!isBot) emit([dealId, 'visitor', action].concat(de), emitData);
 
             // emit visitor source
             if (!isBot) {
@@ -445,7 +445,7 @@ exports.views = {
                     }
 
                     if(localPage) emit([dealId, type, action, source, localPage].concat(de), emitData);
-                    //else emit([dealId, type, action, source].concat(de), emitData);
+                    else emit([dealId, type, action, source].concat(de), emitData);
                 }
             }
         },
