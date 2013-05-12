@@ -161,7 +161,7 @@ exports.views = {
             }
 
             // emitData
-            var emitData = 1;
+            var emitData = null;
 
             // presenter:action
             var action = doc.data.request.presenter + ':' + doc.data.request.params['action'];
@@ -472,7 +472,7 @@ exports.views = {
             }
 
             // emitData
-            var emitData = 1;
+            var emitData = null;
 
             // presenter:action
             var action = doc.data.request.presenter + ':' + doc.data.request.params['action'];
@@ -564,20 +564,19 @@ exports.views = {
 
             if (source) place += ', from ' + source;
             if (search) place += ' (' + search + ')';
-            emitData = isBot ? null : [date.getTime(), place];
-
-            // ip
-            if (doc.data.request.ip) {
-                emit([doc.data.request.ip, isBot ? 'b' : 'v'].concat(de), emitData);
-            }
+            emitData = isBot ? null : [date.getTime() / 1000, place];
 
             // cat
             var cat = doc.data.cat;
             if (!cat || ["undefined", ""].indexOf(cat) >= 0) cat = '[none]';
-            if (cat == '[none]') return;
+
+            // ip
+            if (doc.data.request.ip) {
+                emit([doc.data.request.ip, isBot ? 'b' : 'v'].concat(isBot ? null : cat), emitData);
+            }
 
             // emit
-            if (!isBot && cat) emit([cat, isBot ? 'b' : 'v'].concat(de), emitData);
+            if (!isBot && cat) emit([cat, isBot ? 'b' : 'v'].concat(doc.data.request.ip), emitData);
 
 
         },
@@ -606,7 +605,7 @@ exports.views = {
             var action = doc.data.request.presenter + ':' + doc.data.request.params['action'];
 
             // emit
-            emit([action, doc.message].concat(de), parseInt(doc.duration, 10));
+            emit([action].concat(de), parseInt(doc.duration, 10));
         },
         reduce: "_stats"
     },
