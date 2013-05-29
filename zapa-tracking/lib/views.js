@@ -198,6 +198,9 @@ exports.views = {
             }
             isBot = doc.data.headers.from || botMatch;
 
+            //ignore bots
+            if(isBot) return;
+
             emit([isBot ? 'bot' : 'visitor', referer].concat(de), emitData);
 
 
@@ -302,6 +305,9 @@ exports.views = {
             else if (isOpen) type = 'open';
 
 
+            //ignore bots
+            if(isBot) return;
+
             // emitData
             var emitData = {
                 userAgent: userAgent,
@@ -396,6 +402,9 @@ exports.views = {
 
             // referrer id
             var referrerId = doc.data.request.params['referrerId'] || null;
+
+            //ignore bots
+            if(isBot) return;
 
             // -- emit --
             // emit bot action
