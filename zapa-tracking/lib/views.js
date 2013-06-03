@@ -538,7 +538,7 @@ exports.views = {
             if(isBot) return;
 
             // ignore other than detail, default and category
-            if (action !== 'Site:detail' && action !== 'Site:default' && action !== 'Site:category') return; // action !== 'Site:order' && action !== 'Site:complete'
+            if (action !== 'Site:detail' && action !== 'Site:default' && action !== 'Site:category' && action !== 'Site:order' && action !== 'Site:complete') return; // && action !== 'Site:order' && action !== 'Site:complete'
 
             // -- emit --
             // emit bot action
