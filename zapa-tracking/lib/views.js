@@ -537,18 +537,15 @@ exports.views = {
             //ignore bots
             if(isBot) return;
 
+            // ignore other than detail, default and category
+            if (action !== 'Site:detail' && action !== 'Site:default' && action !== 'Site:category') return; // action !== 'Site:order' && action !== 'Site:complete'
+
             // -- emit --
             // emit bot action
             if (isBot) emit(['bot', action].concat(de), emitData);
 
             // emit visitor action
             if (!isBot) emit(['visitor', action].concat(de), emitData);
-
-            // ignore other than detail, default and category
-            var refererDeal = referrer.match(/.*detail\/id\-([0-9]+)\-\-.*/i);
-            var refererCategory = referrer.match(/.*kategorie\/([a-z-]+).*/i);
-            var refererDefault = referrer.match(/.*\.cz\//i);
-            if (!refererDeal && !refererCategory && !refererDefault) return;
 
             // emit visitor source
             if (!isBot) {
