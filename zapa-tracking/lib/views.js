@@ -462,6 +462,143 @@ exports.views = {
     },
 
 
+    /* ----------------------- ALL VISIT of zapakatel ---------------------------------- */
+    "all-visit": {
+        map: function(doc) {
+            if (!doc.type || doc.type.indexOf("/type/access") === -1) return;
+
+            //uplatnito blacklist
+            if(doc.ip === '81.91.92.26') return;
+
+            // time
+            var d = doc.time.replace(/[-TZ:.]/g, '-').split('-');
+            var date = new Date(d[0], d[1] - 1, d[2], d[3], d[4]);
+            date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+            var de = [date.getFullYear(), date.getMonth() + 1, date.getDate(), date.getHours() /*, date.getMinutes() */ ];
+            for (var t = 0; t < de.length; t++) {
+                de[t] = (de[t] < 10 ? '0' : '') + de[t];
+            }
+
+            // emitData
+            var emitData = null;
+
+            // presenter:action
+            var action = doc.data.request.presenter + ':' + doc.data.request.params['action'];
+            var userAgent = doc.data.headers['user-agent'].replace('User-Agent: ', ''); //firefox kiks, hm nebo parsováni?
+            var userAgentType = doc.data.headers.from ? doc.data.headers.from : userAgent.replace(/^([a-z-]+).*$/i, "$1");
+            var referrerId = doc.data.request.params['referrerId'] || null;
+            var isBot = false;
+
+
+            var headers = ["GoogleBot", "bingbot", "facebookexternalhit", "Jakarta", "AhrefsBot" // fb9bd5e29069bc930450366e729cd471
+            , "ia_archiver" // 780b34392f7545a2110665ae774c334c
+            , "Sogou web spider" // fb9bd5e29069bc930450366e7290fc31
+            , "Baiduspider" // fb9bd5e29069bc930450366e72b321e1
+            , "Seznam screenshot-generator" // fb9bd5e29069bc930450366e72929bb2
+            , "Yahoo! Slurp" // fb9bd5e29069bc930450366e729bb4c3
+            , "SeznamBot" // 9659bb07d1fa75d92d40ba688260539d
+            , "AdsBot-Google" // 780b34392f7545a2110665ae773e2f5b
+            , "bitlybot" // 9c87b0733d22837b4b1c0699810741a0
+            , "Feedfetcher-Google" // 9c87b0733d22837b4b1c06998160a13f
+            , "magpie-crawler" // 8b2bae1a27aaaf3d7c3b451987946eb1
+            , "Ezooms" // 9c87b0733d22837b4b1c069981b417c3
+            , "ExB Language Crawler" // 8b2bae1a27aaaf3d7c3b451987438852
+            , "TinEye-bot" // 780b34392f7545a2110665ae77177d77
+            , "YandexBot" // fb9bd5e29069bc930450366e72aefa92
+            , "Exabot" // 780b34392f7545a2110665ae77194faf
+            , "spbot" // fb9bd5e29069bc930450366e7294d802
+            , "MJ12bot" // 52f56722ed8098110aaf36fb02b61dba
+            ];
+
+
+            var botMatch = false;
+            for (var j = 0; j < headers.length && botMatch === false; j++) {
+                if (userAgent.indexOf(headers[j]) >= 0) botMatch = headers[j];
+            }
+            isBot = doc.data.headers.from || botMatch;
+
+            // utm
+            var utmSource = doc.data.request.params['utm_source'] || null;
+            var utmMedium = doc.data.request.params['utm_medium'] || null;
+            var utmContent = doc.data.request.params['utm_content'] || null;
+
+            // facebook
+            var fbSource = doc.data.request.params['fb_source'] || null;
+
+            // referrer domain at 2nd level, i.e. "xx.yy"
+            var referrer = doc.data.headers.referer;
+            var matches = referrer ? referrer.match(/^https?\:\/\/(([^\/]*\.)|)([^\/?#\.]+\.[^\/?#\.]+)(?:[\/?#]|$)/i) : null; //WTF, TODO rewrite and commment it
+            var referrerDomain = (referrer && matches) ? matches[3] : null;
+
+
+            // referrer id
+            var referrerId = doc.data.request.params['referrerId'] || null;
+
+            //ignore bots
+            if(isBot) return;
+
+            // -- emit --
+            // emit bot action
+            if (isBot) emit(['bot', action].concat(de), emitData);
+
+            // emit visitor action
+            if (!isBot) emit(['visitor', action].concat(de), emitData);
+
+            // ignore other than detail, default and category
+            var refererDeal = referrer.match(/.*detail\/id\-([0-9]+)\-\-.*/i);
+            var refererCategory = referrer.match(/.*kategorie\/([a-z-]+).*/i);
+            var refererDefault = referrer.match(/.*\.cz\//i);
+            if (!refererDeal && !refererCategory && !refererDefault) return;
+
+            // emit visitor source
+            if (!isBot) {
+                var source;
+                var localPage;
+                if (utmSource && utmSource != 'affiliate') source = utmSource;
+                else if (referrerDomain) source = referrerDomain;
+                else if (utmMedium) source = utmMedium;
+                else if (referrerId) source = referrerId;
+                else if (utmContent) source = utmContent;
+                else if (fbSource) source = 'facebook';
+
+                if (source) {
+                    var type = ['zapakatel.cz', 'zabagatel.sk'].indexOf(source) >= 0 ? 'inter' : 'source';
+
+                    if(type == 'inter') {
+                        var typeId = null;
+
+
+                        var refererDeal = referrer.match(/.*detail\/id\-([0-9]+)\-\-.*/i);
+                        var refererCategory = referrer.match(/.*kategorie\/([a-z-]+).*/i);
+                        var refererTag = referrer.match(/.*tag\/([a-z-]+).*/i);
+
+                        if(refererDeal) {
+                            localPage = 'detail';
+                            typeId = refererDeal[1];
+                        }
+                        if(refererCategory) {
+                            localPage = 'category';
+                            typeId = refererCategory[1];
+                        }
+                        if(refererTag) {
+                            localPage = 'tag';
+                            typeId = refererTag[1];
+                        }
+
+                        if(localPage) {
+                            emitData = { from: localPage, id: typeId };
+                        }
+                    }
+
+                    if(localPage) emit([type, action, source, localPage].concat(de), emitData);
+                    else emit([type, action, source].concat(de), emitData);
+                }
+            }
+        },
+        reduce: "_count"
+    },
+
+
     /* ----------------------- CAT IP ---------------------------------- */
 
     "cat-ip": {
