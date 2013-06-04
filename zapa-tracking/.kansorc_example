@@ -1,0 +1,5 @@
+exports.env = {
+    'default': {
+        db: 'http://kanso:kanso3@d.n13.cz:9090/zapa-tracking'
+    }
+};
