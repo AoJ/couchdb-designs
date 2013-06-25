@@ -4,7 +4,7 @@
   "description": "ERROR: No README.md file found!",
   "main": "server.js 10000",
   "dependencies": {
-    "axon": "~0.6.1",
+    "axon": "https://github.com/AoJ/axon/tarball/live",
     "nano": "~3.3.8",
     "underscore": "~1.4.4"
   },
