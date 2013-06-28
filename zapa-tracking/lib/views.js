@@ -210,6 +210,117 @@ exports.views = {
     },
 
 
+
+
+    /* ----------------------- EMAILLING ---------------------------------- */
+
+    "emailling": {
+        map: function(doc) {
+            if (!doc.type || doc.type.indexOf("/type/access") === -1) return;
+
+            //uplatnito blacklist
+            if(doc.ip === '81.91.92.26') return;
+
+
+            //open track
+            var isOpen = (doc.message == 'Newsletter:view [GET]');
+            var isDirectEmail = doc.data.request.params['utm_medium'] == 'remarketing_email';
+            var campaign = doc.data.request.params['utm_campaign'];
+            var content = doc.data.request.params['utm_content'];
+
+            //http://www.zapakatel.cz/s/10363/?
+            //utm_source=zapakatel
+            //&utm_medium=remarketing_email
+            //&utm_campaign=serrano_gornitzki
+            //&utm_content=sunka_serrano+nid:848459+email:25eb098ffbe0c0f6cdcc536caffaacba
+
+            if(!isDirectEmail) return;
+
+            //content split
+            var data = content.split(' ');
+            var params = {};
+            for (var n = 0; n < data.length; n++) {
+                var tmp = data[n].split(':');
+
+                params[tmp[0]] = tmp[1];
+            }
+
+            if (!params.nid) return;
+
+
+            // time
+            var d = doc.time.replace(/[-TZ:.]/g, '-').split('-');
+            var date = new Date(d[0], d[1] - 1, d[2], d[3], d[4]);
+            date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+            var de = [date.getFullYear(), date.getMonth() + 1, date.getDate(), date.getHours() /*, date.getMinutes() */ ];
+            for (var t = 0; t < de.length; t++) {
+                de[t] = (de[t] < 10 ? '0' : '') + de[t];
+            }
+
+            // presenter:action
+            var action = doc.data.request.presenter + ':' + doc.data.request.params['action'];
+            var userAgent = doc.data.headers['user-agent'].replace('User-Agent: ', ''); //firefox kiks, hm nebo parsováni?
+            var userAgentType = doc.data.headers.from ? doc.data.headers.from : userAgent.replace(/^([a-z-]+).*$/i, "$1");
+            var referrerId = doc.data.request.params['referrerId'] || null;
+            var isBot = false;
+
+
+            var headers = ["GoogleBot", "bingbot", "facebookexternalhit", "Jakarta", "AhrefsBot" // fb9bd5e29069bc930450366e729cd471
+            , "ia_archiver" // 780b34392f7545a2110665ae774c334c
+            , "Sogou web spider" // fb9bd5e29069bc930450366e7290fc31
+            , "Baiduspider" // fb9bd5e29069bc930450366e72b321e1
+            , "Seznam screenshot-generator" // fb9bd5e29069bc930450366e72929bb2
+            , "Yahoo! Slurp" // fb9bd5e29069bc930450366e729bb4c3
+            , "SeznamBot" // 9659bb07d1fa75d92d40ba688260539d
+            , "AdsBot-Google" // 780b34392f7545a2110665ae773e2f5b
+            , "bitlybot" // 9c87b0733d22837b4b1c0699810741a0
+            , "Feedfetcher-Google" // 9c87b0733d22837b4b1c06998160a13f
+            , "magpie-crawler" // 8b2bae1a27aaaf3d7c3b451987946eb1
+            , "Ezooms" // 9c87b0733d22837b4b1c069981b417c3
+            , "ExB Language Crawler" // 8b2bae1a27aaaf3d7c3b451987438852
+            , "TinEye-bot" // 780b34392f7545a2110665ae77177d77
+            , "YandexBot" // fb9bd5e29069bc930450366e72aefa92
+            , "Exabot" // 780b34392f7545a2110665ae77194faf
+            , "spbot" // fb9bd5e29069bc930450366e7294d802
+            , "MJ12bot" // 52f56722ed8098110aaf36fb02b61dba
+            ];
+
+
+            var botMatch = false;
+            for (var j = 0; j < headers.length && botMatch === false; j++) {
+                if (userAgent.indexOf(headers[j]) >= 0) botMatch = headers[j];
+            }
+            isBot = doc.data.headers.from || botMatch;
+
+            // referrer domain at 2nd level, i.e. "xx.yy"
+            var referrer = doc.data.headers.referer;
+            var matches = referrer ? referrer.match(/^https?\:\/\/(([^\/]*\.)|)([^\/?#\.]+\.[^\/?#\.]+)(?:[\/?#]|$)/i) : null;
+            var referrerDomain = (referrer && matches) ? matches[3] : null;
+
+            var type = 'visitor';
+            if (isBot) type = 'bot';
+            else if (isOpen) type = 'open';
+
+
+            //ignore bots
+            if(isBot) return;
+
+            // emitData
+            var emitData = {
+                userAgent: userAgent,
+                referrerDomain: referrerDomain,
+                date: de
+            };
+
+            // emit
+            emit([type, campaign, params.nid, parseInt(de.join(''))], emitData);
+            if (!isBot && referrerDomain) emit(['referer', type, referrerDomain, campaign, newsletter.nid], emitData);
+
+        },
+        reduce: "_count"
+    },
+
+
     /* ----------------------- NEWSLETTER VISIT ---------------------------------- */
 
     "newsletter-visit": {
